@@ -24,33 +24,30 @@ const p5Events = [
   'deviceShaken'
 ];
 
-export default function P5Sketch(props) {
-  const canvasRef = useRef();
+export default function P5Sketch({ sketch, ...props }) {
+  const canvasWrapperRef = useRef();
   const sketchRef = useRef();
 
   useEffect(() => {
-    sketchRef.current = new p5(p => {
-      p.setup = () => {
-        props.setup(p, canvasRef.current);
-      };
-      p5Events.forEach(e => {
-        if (props[e]) {
-          p[e] = () => props[e](p);
-        }
-      });
+    sketchRef.current = new p5(sketch, canvasWrapperRef.current);
+
+    // setup event listeners... passed sketch instance when called
+    p5Events.forEach(e => {
+      if (props[e]) {
+        sketchRef.current[e] = () => props[e](sketchRef.current);
+      }
     });
 
     return () => sketchRef.current.remove();
-  }, [props]);
+  }, [sketch, props]);
 
-  return <div ref={canvasRef} className={props.className || ''} />;
+  return <div ref={canvasWrapperRef} className={props.className || ''} />;
 }
 
 P5Sketch.propTypes = {
   className: PropTypes.string,
   style: PropTypes.object,
-  setup: PropTypes.func.isRequired,
-  draw: PropTypes.func,
+  sketch: PropTypes.func,
   windowResized: PropTypes.func,
   preload: PropTypes.func,
   mouseClicked: PropTypes.func,
